@@ -1,3 +1,6 @@
+# Local agent handoff (not for GitHub)
+AGENT_CONTEXT.md
+
 # Dependencies
 node_modules/
 venv/

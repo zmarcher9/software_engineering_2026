@@ -4,8 +4,8 @@ load_dotenv()
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-
 from database import get_supabase_client, test_supabase_connection
+from routes_auth import router as auth_router
 
 app = FastAPI(title="FlowFunds API", version="0.1.0")
 
@@ -16,7 +16,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
+app.include_router(auth_router)
 
 @app.get("/")
 def health_check():

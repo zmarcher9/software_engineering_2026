@@ -2,3 +2,6 @@ fastapi==0.115.12
 uvicorn[standard]==0.34.2
 python-dotenv==1.1.0
 supabase==2.15.2
+
+passlib[bcrypt]==1.7.4
+python-jose[cryptography]==3.5.0

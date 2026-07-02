@@ -20,6 +20,7 @@ FlowFunds is a personal finance web app for Spring 2026 (Software Engineering). 
 software_engineering_2026/
 ├── client/          # React + Vite frontend
 └── server/          # FastAPI backend
+    └── migrations/  # PostgreSQL/Supabase schema migrations
 ```
 
 ## Getting Started
@@ -71,6 +72,12 @@ The API runs at http://localhost:8000
 
 - Health check: `GET /` returns `{"status": "ok"}`
 - Supabase connection test: `GET /health/db` returns `{"status": "ok", "database": "connected"}`
+
+### Database Schema (`/server/migrations`)
+
+Apply the initial PostgreSQL schema by opening the Supabase dashboard, going to SQL Editor, pasting the contents of `server/migrations/001_initial_schema.sql`, and running it.
+
+This creates the `users`, `categories`, `budgets`, `transactions`, and `alerts` tables with primary keys, foreign keys, check constraints, indexes, and timestamp triggers.
 
 ## Environment Variables
 

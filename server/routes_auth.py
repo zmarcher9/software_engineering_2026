@@ -1,3 +1,7 @@
+"""
+Person 3: Khai Kieu part for  User authentication as well as register/login endpoints in FastAPI,
+password hashing, session/token management, per-user data isolation
+"""
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, EmailStr
 

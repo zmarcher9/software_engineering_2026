@@ -10,8 +10,6 @@ from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt
 from passlib.context import CryptContext
 
-from database import get_supabase_client
-
 # secret used to sign tokens, keep this in .env, never hardcode in real life
 SECRET_KEY = os.getenv("JWT_SECRET", "dev-secret-change-me")
 ALGORITHM = "HS256"

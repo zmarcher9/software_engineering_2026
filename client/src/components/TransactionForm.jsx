@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { transactionAPI, categoryAPI } from "../services/api";
 
 // Mock categories for MVP - will be replaced with backend fetch once auth is ready
@@ -26,20 +26,21 @@ export default function TransactionForm() {
   const [message, setMessage] = useState(null);
   const [categories, setCategories] = useState(MOCK_CATEGORIES);
 
-  // Fetch categories from backend (commented out until Person 3's auth is ready)
-  // useEffect(() => {
-  //   const fetchCategories = async () => {
-  //     try {
-  //       const data = await categoryAPI.getAll();
-  //       setCategories(data);
-  //     } catch (error) {
-  //       console.error("Failed to fetch categories:", error);
-  //       // Fallback to mock categories if fetch fails
-  //       setCategories(MOCK_CATEGORIES);
-  //     }
-  //   };
-  //   fetchCategories();
-  // }, []);
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const data = await categoryAPI.getAll();
+        if (Array.isArray(data) && data.length > 0) {
+          setCategories(data);
+        }
+      } catch (error) {
+        console.error("Failed to fetch categories:", error);
+        setCategories(MOCK_CATEGORIES);
+      }
+    };
+
+    fetchCategories();
+  }, []);
 
   const handleInputChange = (e) => {
     const { name, value, type } = e.target;
@@ -103,11 +104,6 @@ export default function TransactionForm() {
     setMessage(null);
 
     try {
-      // For MVP, we'll just log the data
-      // Once Person 3's auth is ready, uncomment the API call
-      console.log("Transaction data to be submitted:", formData);
-
-      // Prepare data for API (this will work once backend is ready)
       const submitData = {
         amount: formData.amount,
         category_id: formData.categoryId || null,
@@ -117,17 +113,10 @@ export default function TransactionForm() {
         transaction_type: formData.transactionType,
       };
 
-      // Uncomment once Person 3's auth is ready:
-      // const response = await transactionAPI.create(submitData);
-      // setMessage({
-      //   type: "success",
-      //   text: `Transaction created successfully! ID: ${response.id}`,
-      // });
-
-      // For MVP, show success message
+      const response = await transactionAPI.create(submitData);
       setMessage({
         type: "success",
-        text: "Transaction submitted! (Backend integration ready for Person 3's auth)",
+        text: `Transaction created successfully! ID: ${response.id}`,
       });
 
       // Reset form

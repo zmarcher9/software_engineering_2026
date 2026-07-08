@@ -1,7 +1,7 @@
-from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel, EmailStr
+from fastapi import APIRouter, Depends, HTTPException
+from pydantic import BaseModel, EmailStr, Field
 
-from auth import hash_password, verify_password, create_access_token
+from auth import create_access_token, get_current_user, hash_password, verify_password
 from database import get_supabase_client
 
 router = APIRouter(prefix="/auth", tags=["auth"])
@@ -9,7 +9,7 @@ router = APIRouter(prefix="/auth", tags=["auth"])
 
 class RegisterRequest(BaseModel):
     email: EmailStr
-    password: str
+    password: str = Field(min_length=8)
 
 
 class LoginRequest(BaseModel):
@@ -17,10 +17,23 @@ class LoginRequest(BaseModel):
     password: str
 
 
+class UserResponse(BaseModel):
+    id: str
+    email: EmailStr
+
+
+def validate_password(password: str) -> None:
+    if not any(char.isdigit() for char in password):
+        raise HTTPException(status_code=400, detail="Password must include at least one number")
+    if not any(char.isalpha() for char in password):
+        raise HTTPException(status_code=400, detail="Password must include at least one letter")
+
+
 @router.post("/register")
 def register(req: RegisterRequest):
+    validate_password(req.password)
+
     supabase = get_supabase_client()
-    # check if the email is already taken before inserting a new row
     existing = supabase.table("users").select("id").eq("email", req.email).execute()
     if existing.data:
         raise HTTPException(status_code=400, detail="Email already registered")
@@ -42,3 +55,13 @@ def login(req: LoginRequest):
 
     token = create_access_token(result.data[0]["id"])
     return {"access_token": token, "token_type": "bearer"}
+
+
+@router.get("/me", response_model=UserResponse)
+def read_current_user(user_id: str = Depends(get_current_user)):
+    supabase = get_supabase_client()
+    result = supabase.table("users").select("id, email").eq("id", user_id).execute()
+    if not result.data:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    return result.data[0]

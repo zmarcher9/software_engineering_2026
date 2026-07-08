@@ -1,5 +1,6 @@
 // API client configuration and endpoints
-const API_BASE_URL = "http://localhost:8000/api";
+// Use Vite env var `VITE_API_BASE_URL` when available, otherwise default to localhost
+const API_BASE_URL = (import.meta.env && import.meta.env.VITE_API_BASE_URL) || "http://localhost:8000/api";
 
 // Helper function to get auth token from localStorage
 const getAuthToken = () => {

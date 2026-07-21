@@ -63,5 +63,8 @@ jobs:
       - name: Lint (if configured)
         run: npm run lint --if-present
 
+      - name: Test frontend
+        run: npm run test:run
+
       - name: Build
         run: npm run build

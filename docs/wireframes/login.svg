@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500" font-family="Helvetica, Arial, sans-serif">
+  <rect width="800" height="500" fill="#0f172a"/>
+  <text x="400" y="60" text-anchor="middle" fill="#34d399" font-size="14" letter-spacing="3">FLOWFUNDS</text>
+  <rect x="220" y="100" width="360" height="340" rx="16" fill="#1e293b" stroke="#334155"/>
+  <text x="400" y="150" text-anchor="middle" fill="#ffffff" font-size="22" font-weight="600">Log in</text>
+  <text x="400" y="175" text-anchor="middle" fill="#94a3b8" font-size="12">[ Log in ] tab | Sign up tab</text>
+
+  <text x="250" y="215" fill="#cbd5e1" font-size="12">Email</text>
+  <rect x="250" y="222" width="300" height="34" rx="6" fill="#0f172a" stroke="#475569"/>
+
+  <text x="250" y="278" fill="#cbd5e1" font-size="12">Password</text>
+  <rect x="250" y="285" width="300" height="34" rx="6" fill="#0f172a" stroke="#475569"/>
+
+  <rect x="250" y="345" width="300" height="40" rx="8" fill="#10b981"/>
+  <text x="400" y="370" text-anchor="middle" fill="#052e21" font-size="14" font-weight="600">Log in</text>
+
+  <text x="400" y="410" text-anchor="middle" fill="#94a3b8" font-size="12">Error banner appears here on failed login</text>
+  <text x="400" y="430" text-anchor="middle" fill="#64748b" font-size="12">Don't have an account? Sign up</text>
+</svg>

@@ -5,4 +5,9 @@ supabase==2.15.2
 email-validator==2.2.0
 
 passlib[bcrypt]==1.7.4
+# Pin bcrypt: passlib 1.7.4 (unmaintained) crashes its own backend
+# self-test against bcrypt>=4.1 (AttributeError: module 'bcrypt' has no
+# attribute '__about__', then ValueError on the 72-byte self-test string),
+# which breaks every register/login call. 4.0.1 is the last compatible release.
+bcrypt==4.0.1
 python-jose[cryptography]==3.5.0

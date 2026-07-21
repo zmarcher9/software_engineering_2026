@@ -7,3 +7,6 @@ dist/
 build/
 .env
 .env.local
+.env.staging
+.env.production
+.pytest_cache/

@@ -4,6 +4,7 @@ import Layout from './components/Layout'
 import ProtectedRoute from './components/ProtectedRoute'
 import AuthPage from './pages/AuthPage'
 import DashboardPage from './pages/DashboardPage'
+import TransactionsPage from './pages/TransactionsPage'
 
 function AppContent() {
   const [token, setToken] = useState(() => localStorage.getItem('flowfunds_token'))
@@ -51,6 +52,14 @@ function AppContent() {
           element={
             <ProtectedRoute isAuthenticated={isAuthenticated}>
               <DashboardPage user={user} />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/transactions"
+          element={
+            <ProtectedRoute isAuthenticated={isAuthenticated}>
+              <TransactionsPage />
             </ProtectedRoute>
           }
         />

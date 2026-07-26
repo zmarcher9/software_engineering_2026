@@ -3,6 +3,7 @@ table query API, just enough to exercise routes_auth.py without a network
 call or real database.
 """
 from types import SimpleNamespace
+from uuid import uuid4
 
 
 class _FakeQuery:
@@ -18,6 +19,9 @@ class _FakeQuery:
 
     def eq(self, column, value):
         self._filters[column] = value
+        return self
+
+    def order(self, *_args, **_kwargs):
         return self
 
     def insert(self, payload):
@@ -42,7 +46,43 @@ class FakeSupabaseClient:
 
     def __init__(self):
         self._store: dict[str, list[dict]] = {}
+        self.auth = _FakeAuth()
 
     def table(self, name):
         rows = self._store.setdefault(name, [])
         return _FakeQuery(rows, name, self._store)
+
+
+class _FakeAuth:
+    def __init__(self):
+        self._users = {}
+        self._tokens = {}
+
+    def _response(self, user, token):
+        session = SimpleNamespace(access_token=token) if token else None
+        return SimpleNamespace(user=user, session=session)
+
+    def sign_up(self, credentials):
+        email = credentials["email"]
+        if email in self._users:
+            raise ValueError("User already registered")
+        user = SimpleNamespace(id=str(uuid4()), email=email)
+        token = f"supabase-token-{user.id}"
+        self._users[email] = (user, credentials["password"])
+        self._tokens[token] = user
+        return self._response(user, token)
+
+    def sign_in_with_password(self, credentials):
+        record = self._users.get(credentials["email"])
+        if record is None or record[1] != credentials["password"]:
+            raise ValueError("Invalid login credentials")
+        user = record[0]
+        token = f"supabase-token-{user.id}"
+        self._tokens[token] = user
+        return self._response(user, token)
+
+    def get_user(self, token):
+        user = self._tokens.get(token)
+        if user is None:
+            raise ValueError("Invalid JWT")
+        return SimpleNamespace(user=user)

@@ -23,11 +23,9 @@ def ssl_verify_enabled() -> bool:
     return value not in {"0", "false", "no"}
 
 
-def get_supabase_client() -> Client:
+def get_supabase_client(access_token: str | None = None) -> Client:
+    """Return the shared public client or a request-scoped authenticated client."""
     global _supabase_client
-
-    if _supabase_client is not None:
-        return _supabase_client
 
     url = os.getenv("SUPABASE_URL")
     key = os.getenv("SUPABASE_ANON_KEY")
@@ -36,6 +34,14 @@ def get_supabase_client() -> Client:
         raise RuntimeError(
             "Missing Supabase credentials. Set SUPABASE_URL and SUPABASE_ANON_KEY in server/.env"
         )
+
+    if access_token:
+        client = create_client(normalize_supabase_url(url), key)
+        client.postgrest.auth(access_token)
+        return client
+
+    if _supabase_client is not None:
+        return _supabase_client
 
     _supabase_client = create_client(normalize_supabase_url(url), key)
     return _supabase_client

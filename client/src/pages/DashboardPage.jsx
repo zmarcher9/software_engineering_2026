@@ -7,8 +7,7 @@ import TransactionForm from '../components/TransactionForm'
 import api from '../api'
 import { mockTransactions } from '../mockData'
 
-// flip this to false once Person 2's GET /transactions endpoint is live
-const USE_MOCK_DATA = true
+const USE_MOCK_DATA = import.meta.env.VITE_USE_MOCK_DATA !== 'false'
 
 function SummaryCard({ label, value, tone }) {
   // tone controls the accent color so income/expense/balance are visually distinct
@@ -63,10 +62,10 @@ function DashboardPage({ user }) {
   const { totalIncome, totalExpenses, totalBalance } = useMemo(() => {
     const income = transactions
       .filter((t) => t.transaction_type === 'income')
-      .reduce((sum, t) => sum + t.amount, 0)
+      .reduce((sum, t) => sum + Number(t.amount), 0)
     const expenses = transactions
       .filter((t) => t.transaction_type === 'expense')
-      .reduce((sum, t) => sum + t.amount, 0)
+      .reduce((sum, t) => sum + Number(t.amount), 0)
 
     return {
       totalIncome: income,

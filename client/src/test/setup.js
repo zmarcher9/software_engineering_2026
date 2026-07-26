@@ -1,6 +1,6 @@
 import '@testing-library/jest-dom/vitest'
 
-if (!window.localStorage) {
+if (!window.localStorage || typeof window.localStorage.clear !== 'function') {
   const storage = new Map()
   Object.defineProperty(window, 'localStorage', {
     value: {

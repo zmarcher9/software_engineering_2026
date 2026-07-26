@@ -3,6 +3,7 @@ import os
 import httpx
 from dotenv import load_dotenv
 from fastapi import HTTPException
+
 from supabase import Client, create_client
 
 load_dotenv()

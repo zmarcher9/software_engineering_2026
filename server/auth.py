@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from typing import Annotated
 
 from dotenv import load_dotenv
 from fastapi import Depends, HTTPException, status
@@ -17,7 +18,10 @@ class AuthenticatedUser:
 
 
 def get_current_supabase_user(
-    credentials: HTTPAuthorizationCredentials | None = Depends(bearer_scheme),
+    credentials: Annotated[
+        HTTPAuthorizationCredentials | None,
+        Depends(bearer_scheme),
+    ],
 ) -> AuthenticatedUser:
     """Validate a Supabase access token and return the authenticated identity."""
     credentials_exception = HTTPException(
@@ -43,5 +47,5 @@ def get_current_supabase_user(
         )
     except HTTPException:
         raise
-    except Exception:
+    except Exception:  # noqa: BLE001 - normalize all token validation failures to 401
         raise credentials_exception

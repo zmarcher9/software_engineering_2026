@@ -1,6 +1,7 @@
-from datetime import date, datetime
+from datetime import date, datetime, timezone
 from decimal import Decimal
 from enum import Enum
+from typing import Annotated
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Response, status
@@ -31,7 +32,7 @@ class TransactionCreate(BaseModel):
     @field_validator("transaction_date")
     @classmethod
     def reject_future_date(cls, value: date) -> date:
-        if value > date.today():
+        if value > datetime.now(timezone.utc).date():
             raise ValueError("Transaction date cannot be in the future")
         return value
 
@@ -50,7 +51,7 @@ class TransactionUpdate(BaseModel):
     @field_validator("transaction_date")
     @classmethod
     def reject_future_date(cls, value: date | None) -> date | None:
-        if value is not None and value > date.today():
+        if value is not None and value > datetime.now(timezone.utc).date():
             raise ValueError("Transaction date cannot be in the future")
         return value
 
@@ -99,7 +100,7 @@ def _format_transaction(row: dict) -> dict:
 @router.post("", response_model=TransactionResponse, status_code=status.HTTP_201_CREATED)
 def create_transaction(
     transaction: TransactionCreate,
-    user: AuthenticatedUser = Depends(get_current_supabase_user),
+    user: Annotated[AuthenticatedUser, Depends(get_current_supabase_user)],
 ):
     client = get_supabase_client(user.access_token)
     payload = transaction.model_dump(mode="json", exclude={"category"})
@@ -118,7 +119,9 @@ def create_transaction(
 
 
 @router.get("", response_model=list[TransactionResponse])
-def list_transactions(user: AuthenticatedUser = Depends(get_current_supabase_user)):
+def list_transactions(
+    user: Annotated[AuthenticatedUser, Depends(get_current_supabase_user)],
+):
     result = (
         get_supabase_client(user.access_token)
         .table("transactions")
@@ -133,7 +136,7 @@ def list_transactions(user: AuthenticatedUser = Depends(get_current_supabase_use
 @router.get("/{transaction_id}", response_model=TransactionResponse)
 def get_transaction(
     transaction_id: UUID,
-    user: AuthenticatedUser = Depends(get_current_supabase_user),
+    user: Annotated[AuthenticatedUser, Depends(get_current_supabase_user)],
 ):
     result = (
         get_supabase_client(user.access_token)
@@ -152,7 +155,7 @@ def get_transaction(
 def update_transaction(
     transaction_id: UUID,
     transaction: TransactionUpdate,
-    user: AuthenticatedUser = Depends(get_current_supabase_user),
+    user: Annotated[AuthenticatedUser, Depends(get_current_supabase_user)],
 ):
     client = get_supabase_client(user.access_token)
     payload = transaction.model_dump(mode="json", exclude_unset=True, exclude={"category"})
@@ -182,7 +185,7 @@ def update_transaction(
 @router.delete("/{transaction_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_transaction(
     transaction_id: UUID,
-    user: AuthenticatedUser = Depends(get_current_supabase_user),
+    user: Annotated[AuthenticatedUser, Depends(get_current_supabase_user)],
 ):
     result = (
         get_supabase_client(user.access_token)

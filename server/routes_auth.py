@@ -1,3 +1,5 @@
+from typing import Annotated
+
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, EmailStr, Field
 
@@ -69,5 +71,7 @@ def login(req: LoginRequest):
 
 
 @router.get("/me", response_model=UserResponse)
-def read_current_user(user: AuthenticatedUser = Depends(get_current_supabase_user)):
+def read_current_user(
+    user: Annotated[AuthenticatedUser, Depends(get_current_supabase_user)],
+):
     return {"id": user.id, "email": user.email}

@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import Layout from './components/Layout'
 import ProtectedRoute from './components/ProtectedRoute'
+import AdminPage from './pages/AdminPage'
 import AuthPage from './pages/AuthPage'
 import DashboardPage from './pages/DashboardPage'
 import TransactionsPage from './pages/TransactionsPage'
@@ -60,6 +61,14 @@ function AppContent() {
           element={
             <ProtectedRoute isAuthenticated={isAuthenticated}>
               <TransactionsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin"
+          element={
+            <ProtectedRoute isAuthenticated={isAuthenticated} requireAdmin user={user}>
+              <AdminPage />
             </ProtectedRoute>
           }
         />

@@ -94,7 +94,22 @@ function AuthPage({ onAuthSuccess, initialMode = 'login' }) {
         return
       }
 
-      onAuthSuccess(payload.access_token, { email: trimmedEmail })
+      // Fetch the authoritative profile (id + is_admin) instead of trusting
+      // client-side state, so the Admin nav link only ever reflects what
+      // users.is_admin actually says in the database.
+      let profile = { email: trimmedEmail, is_admin: false }
+      try {
+        const meResponse = await fetch(`${API_BASE_URL}/auth/me`, {
+          headers: { Authorization: `Bearer ${payload.access_token}` },
+        })
+        if (meResponse.ok) {
+          profile = await meResponse.json()
+        }
+      } catch {
+        // Non-fatal: fall back to the minimal profile above.
+      }
+
+      onAuthSuccess(payload.access_token, profile)
       navigate('/dashboard')
     } catch (err) {
       setError(err.message)

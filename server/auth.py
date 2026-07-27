@@ -1,59 +1,51 @@
-import os
-from datetime import datetime, timedelta, timezone
+from dataclasses import dataclass
+from typing import Annotated
 
 from dotenv import load_dotenv
 from fastapi import Depends, HTTPException, status
-from fastapi.security import OAuth2PasswordBearer
-from jose import JWTError, jwt
-from passlib.context import CryptContext
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
 load_dotenv()
 
-DEFAULT_SECRET_KEY = "dev-secret-change-me"
-SECRET_KEY = os.getenv("JWT_SECRET", DEFAULT_SECRET_KEY)
-ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24  # 1 day
-
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
+bearer_scheme = HTTPBearer(auto_error=False)
 
 
-def require_secure_secret() -> None:
-    environment = os.getenv("ENVIRONMENT") or os.getenv("RAILWAY_ENVIRONMENT")
-    if environment == "production" and SECRET_KEY == DEFAULT_SECRET_KEY:
-        raise RuntimeError("JWT_SECRET must be set in production")
+@dataclass(frozen=True)
+class AuthenticatedUser:
+    id: str
+    email: str
+    access_token: str
 
 
-def hash_password(password: str) -> str:
-    return pwd_context.hash(password)
-
-
-def verify_password(plain: str, hashed: str) -> bool:
-    return pwd_context.verify(plain, hashed)
-
-
-def create_access_token(user_id: str) -> str:
-    require_secure_secret()
-    payload = {
-        "sub": user_id,
-        "exp": datetime.now(timezone.utc) + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES),
-    }
-    return jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
-
-
-def get_current_user(token: str = Depends(oauth2_scheme)) -> str:
-    require_secure_secret()
+def get_current_supabase_user(
+    credentials: Annotated[
+        HTTPAuthorizationCredentials | None,
+        Depends(bearer_scheme),
+    ],
+) -> AuthenticatedUser:
+    """Validate a Supabase access token and return the authenticated identity."""
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
         headers={"WWW-Authenticate": "Bearer"},
     )
+    if credentials is None or credentials.scheme.lower() != "bearer":
+        raise credentials_exception
+
+    # Import here to avoid an auth/database import cycle.
+    from database import get_supabase_client
+
     try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        user_id: str = payload.get("sub")
-        if user_id is None:
+        response = get_supabase_client().auth.get_user(credentials.credentials)
+        user = response.user
+        if user is None or not user.id or not user.email:
             raise credentials_exception
-        return user_id
-    except JWTError:
+        return AuthenticatedUser(
+            id=str(user.id),
+            email=str(user.email),
+            access_token=credentials.credentials,
+        )
+    except HTTPException:
+        raise
+    except Exception:  # noqa: BLE001 - normalize all token validation failures to 401
         raise credentials_exception

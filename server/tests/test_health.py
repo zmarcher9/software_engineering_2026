@@ -26,8 +26,9 @@ def test_db_health_check_ok(monkeypatch):
 
 
 def test_db_health_check_failure_surfaces_503(monkeypatch):
-    import main
     from fastapi import HTTPException
+
+    import main
 
     def _raise():
         raise HTTPException(status_code=503, detail="Supabase connection failed: boom")

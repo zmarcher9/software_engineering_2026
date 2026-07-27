@@ -10,6 +10,11 @@ def fake_supabase(monkeypatch):
     in-memory fake, so tests don't hit the network or a real project."""
     client = FakeSupabaseClient()
     monkeypatch.setattr("routes_auth.get_supabase_client", lambda: client)
+    monkeypatch.setattr("database.get_supabase_client", lambda access_token=None: client)
+    monkeypatch.setattr(
+        "routes_transactions.get_supabase_client",
+        lambda access_token=None: client,
+    )
     return client
 
 

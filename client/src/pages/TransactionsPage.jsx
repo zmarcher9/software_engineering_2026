@@ -6,8 +6,7 @@ import { useEffect, useMemo, useState } from 'react'
 import api from '../api'
 import { mockTransactions } from '../mockData'
 
-// flip this to false once Person 2's GET /transactions endpoint is live
-const USE_MOCK_DATA = true
+const USE_MOCK_DATA = import.meta.env.VITE_USE_MOCK_DATA !== 'false'
 
 function TransactionsPage() {
   const [transactions, setTransactions] = useState([])
@@ -27,7 +26,10 @@ function TransactionsPage() {
           setTransactions(mockTransactions)
         } else {
           const response = await api.get('/transactions')
-          setTransactions(response.data)
+          setTransactions(response.data.map((transaction) => ({
+            ...transaction,
+            amount: Number(transaction.amount),
+          })))
         }
       } catch (err) {
         setError('Unable to load transactions right now.')

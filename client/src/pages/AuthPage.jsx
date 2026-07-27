@@ -89,6 +89,11 @@ function AuthPage({ onAuthSuccess, initialMode = 'login' }) {
         throw new Error(payload.detail || 'Authentication failed')
       }
 
+      if (payload.requires_email_confirmation) {
+        setError('Check your email to confirm your account, then log in.')
+        return
+      }
+
       onAuthSuccess(payload.access_token, { email: trimmedEmail })
       navigate('/dashboard')
     } catch (err) {

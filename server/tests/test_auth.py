@@ -7,6 +7,7 @@ def test_register_creates_user_and_returns_token(api_client):
     body = response.json()
     assert body["token_type"] == "bearer"
     assert body["access_token"]
+    assert body["requires_email_confirmation"] is False
 
 
 def test_register_rejects_password_without_digit(api_client):
@@ -85,3 +86,31 @@ def test_me_returns_current_user_for_valid_token(api_client):
     assert response.status_code == 200
     body = response.json()
     assert body["email"] == "me@example.com"
+
+
+def test_login_token_is_accepted_by_supabase_auth_dependency(api_client):
+    payload = {"email": "shared@example.com", "password": "password1"}
+    api_client.post("/auth/register", json=payload)
+    login_response = api_client.post("/auth/login", json=payload)
+
+    response = api_client.get(
+        "/auth/me",
+        headers={"Authorization": f"Bearer {login_response.json()['access_token']}"},
+    )
+
+    assert response.status_code == 200
+    assert response.json()["email"] == payload["email"]
+
+
+def test_login_token_is_accepted_by_transactions(api_client):
+    payload = {"email": "transactions@example.com", "password": "password1"}
+    api_client.post("/auth/register", json=payload)
+    login_response = api_client.post("/auth/login", json=payload)
+
+    response = api_client.get(
+        "/transactions",
+        headers={"Authorization": f"Bearer {login_response.json()['access_token']}"},
+    )
+
+    assert response.status_code == 200
+    assert response.json() == []

@@ -2,9 +2,11 @@
 
 Person 2 owns the database schema work in this folder.
 
-## Apply the Initial Schema
+## Apply the Schema
 
-Open the Supabase dashboard, go to SQL Editor, paste the contents of `001_initial_schema.sql`, and run it.
+Run the migrations in numeric order. `001_initial_schema.sql` creates the
+application tables. `002_supabase_auth_and_rls.sql` connects Supabase Auth
+users to application profiles, creates default categories, and enables RLS.
 
 ## Tables Created
 
@@ -14,4 +16,6 @@ Open the Supabase dashboard, go to SQL Editor, paste the contents of `001_initia
 - `transactions`
 - `alerts`
 
-The migration includes primary keys, foreign keys, uniqueness constraints, check constraints, useful indexes, and `updated_at` triggers. Authentication endpoints and API routes are intentionally left for the assigned teammates.
+The migrations include primary keys, foreign keys, uniqueness constraints,
+check constraints, useful indexes, `updated_at` triggers, Auth profile
+synchronization, and user-ownership policies.

@@ -49,3 +49,24 @@ def get_current_supabase_user(
         raise
     except Exception:  # noqa: BLE001 - normalize all token validation failures to 401
         raise credentials_exception
+
+
+def get_current_admin_user(
+    user: Annotated[AuthenticatedUser, Depends(get_current_supabase_user)],
+) -> AuthenticatedUser:
+    """Require the caller to be an authenticated user with users.is_admin = true.
+
+    Reads the flag through the caller's own request-scoped Supabase client, so
+    the check is subject to the same users_select_own RLS policy every other
+    query goes through (a user can always read their own is_admin flag).
+    """
+    # Import here to avoid an auth/database import cycle, matching
+    # get_current_supabase_user above.
+    from database import get_supabase_client
+
+    client = get_supabase_client(user.access_token)
+    result = client.table("users").select("is_admin").eq("id", user.id).execute()
+    is_admin = bool(result.data and result.data[0].get("is_admin"))
+    if not is_admin:
+        raise HTTPException(status_code=403, detail="Admin privileges required")
+    return user

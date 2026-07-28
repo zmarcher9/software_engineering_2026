@@ -29,6 +29,11 @@ function Layout({ onLogout, user }) {
               <NavLink to="/dashboard" className={navLinkClassName}>
                 Budgets
               </NavLink>
+              {user?.is_admin ? (
+                <NavLink to="/admin" className={navLinkClassName}>
+                  Admin
+                </NavLink>
+              ) : null}
             </nav>
 
             <button

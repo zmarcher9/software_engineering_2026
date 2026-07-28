@@ -2,7 +2,7 @@
 
 **Know where your money goes. Get alerts before it's gone.**
 
-FlowFunds is a personal finance web app for Spring 2026 (Software Engineering). Users log transactions, set category budgets, view spending dashboards, and receive alerts before they overspend.
+FlowFunds is a personal finance web app for Spring 2026 (Software Engineering). Users log transactions, set category budgets, view spending dashboards, and receive alerts before they overspend. A separate, read-only admin role can see aggregate activity across every account.
 
 ## Tech Stack
 
@@ -123,6 +123,23 @@ dates cannot be in the future.
 `transaction_type` is either `expense` or `income`. The generated Swagger UI
 documents the full request and response schemas.
 
+### Admin API
+
+`GET /admin/users` returns every account with aggregate stats (category
+count, transaction count, total income, total expenses). It requires a
+Supabase Auth access token belonging to a user whose `users.is_admin` flag is
+`true`; anyone else gets `403 Admin privileges required`.
+
+There is no service-role key or RLS bypass involved: the endpoint queries
+Postgres using the caller's own token, so the `categories_admin_select_all`
+and `transactions_admin_select_all` policies (see
+`server/migrations/003_admin_role.sql`) are what actually grant the
+cross-user read access. Non-admins keep the pre-existing owner-only policies
+and never see another user's rows through this route or any other.
+
+`GET /auth/me` now also returns `is_admin`, which the frontend uses to decide
+whether to show the `/admin` link and route.
+
 Run backend unit tests from the repository root:
 
 ```bash
@@ -131,12 +148,22 @@ PYTHONPATH=server pytest server/tests
 
 ### Database Schema (`/server/migrations`)
 
-Apply `server/migrations/001_initial_schema.sql`, followed by
-`server/migrations/002_supabase_auth_and_rls.sql`, in the Supabase SQL Editor.
+Apply, in order, in the Supabase SQL Editor:
+
+1. `server/migrations/001_initial_schema.sql`
+2. `server/migrations/002_supabase_auth_and_rls.sql`
+3. `server/migrations/003_admin_role.sql`
 
 The second migration synchronizes Supabase Auth users into the application
 profile table, creates default categories, and enables ownership policies for
-users, categories, and transactions.
+users, categories, and transactions. The third adds `users.is_admin` and the
+read-only, admin-only policies described above.
+
+To promote an existing account to admin, run in the Supabase SQL Editor:
+
+```sql
+update public.users set is_admin = true where email = 'you@example.com';
+```
 
 For local frontend development, first register `demo@flowfunds.local` through
 the application (or change `demo_email` in the seed to an accessible test

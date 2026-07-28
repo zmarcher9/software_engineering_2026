@@ -22,6 +22,7 @@ class LoginRequest(BaseModel):
 class UserResponse(BaseModel):
     id: str
     email: EmailStr
+    is_admin: bool = False
 
 
 def validate_password(password: str) -> None:
@@ -74,4 +75,7 @@ def login(req: LoginRequest):
 def read_current_user(
     user: Annotated[AuthenticatedUser, Depends(get_current_supabase_user)],
 ):
-    return {"id": user.id, "email": user.email}
+    client = get_supabase_client(user.access_token)
+    result = client.table("users").select("is_admin").eq("id", user.id).execute()
+    is_admin = bool(result.data and result.data[0].get("is_admin"))
+    return {"id": user.id, "email": user.email, "is_admin": is_admin}

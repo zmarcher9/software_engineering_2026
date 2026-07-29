@@ -36,7 +36,9 @@ def get_current_supabase_user(
     from database import get_supabase_client
 
     try:
-        response = get_supabase_client().auth.get_user(credentials.credentials)
+        response = get_supabase_client(credentials.credentials).auth.get_user(
+            credentials.credentials
+        )
         user = response.user
         if user is None or not user.id or not user.email:
             raise credentials_exception

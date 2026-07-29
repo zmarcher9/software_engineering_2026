@@ -1,5 +1,5 @@
 from calendar import monthrange
-from datetime import date
+from datetime import date, datetime, timezone
 from decimal import Decimal
 from typing import Annotated
 from uuid import UUID
@@ -25,7 +25,7 @@ class BudgetSummary(BaseModel):
 
 
 def _month_bounds() -> tuple[date, date]:
-    today = date.today()
+    today = datetime.now(timezone.utc).date()
     return today.replace(day=1), today.replace(day=monthrange(today.year, today.month)[1])
 
 
@@ -71,14 +71,14 @@ def list_budgets(
         if row.get("transaction_type") != "expense" or not row.get("category_id"):
             continue
         category_id = row["category_id"]
-        spent[category_id] = spent.get(category_id, Decimal("0")) + Decimal(str(row["amount"]))
+        spent[category_id] = spent.get(category_id, Decimal(0)) + Decimal(str(row["amount"]))
 
     return [
         {
             "category_id": category["id"],
             "category": category["name"],
             "limit_amount": limits.get(category["id"]),
-            "spent": spent.get(category["id"], Decimal("0")),
+            "spent": spent.get(category["id"], Decimal(0)),
         }
         for category in categories
         if category["name"] != "Salary"

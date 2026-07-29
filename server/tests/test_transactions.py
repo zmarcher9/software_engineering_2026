@@ -180,7 +180,7 @@ def test_transactions_require_authentication():
 
 def test_supabase_access_token_is_validated(monkeypatch):
     fake_client = type("Client", (), {"auth": FakeAuth(USER_ID)})()
-    monkeypatch.setattr(database, "get_supabase_client", lambda: fake_client)
+    monkeypatch.setattr(database, "get_supabase_client", lambda access_token=None: fake_client)
     credentials = HTTPAuthorizationCredentials(
         scheme="Bearer",
         credentials="supabase-access-token",
@@ -190,7 +190,7 @@ def test_supabase_access_token_is_validated(monkeypatch):
 
 def test_invalid_supabase_access_token_is_rejected(monkeypatch):
     fake_client = type("Client", (), {"auth": FakeAuth(error=ValueError("expired"))})()
-    monkeypatch.setattr(database, "get_supabase_client", lambda: fake_client)
+    monkeypatch.setattr(database, "get_supabase_client", lambda access_token=None: fake_client)
     credentials = HTTPAuthorizationCredentials(
         scheme="Bearer",
         credentials="supabase-access-token",

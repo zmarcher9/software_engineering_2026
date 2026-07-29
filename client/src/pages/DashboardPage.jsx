@@ -57,6 +57,13 @@ function DashboardPage({ user }) {
     loadTransactions()
   }, [])
 
+  const handleTransactionSaved = (transaction) => {
+    setTransactions((current) => [
+      { ...transaction, amount: Number(transaction.amount) },
+      ...current,
+    ])
+  }
+
   // totals are derived from raw transactions rather than stored separately,
   // so they always stay in sync with whatever data is currently loaded
   const { totalIncome, totalExpenses, totalBalance } = useMemo(() => {
@@ -111,7 +118,7 @@ function DashboardPage({ user }) {
       </div>
 
       <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
-        <TransactionForm />
+        <TransactionForm onTransactionSaved={handleTransactionSaved} />
 
         <section className="space-y-4">
           <div className="rounded-2xl border border-slate-800 bg-slate-900/70 p-6">

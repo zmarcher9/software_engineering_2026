@@ -5,7 +5,7 @@ from typing import Annotated
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Response, status
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from auth import AuthenticatedUser, get_current_supabase_user
 from database import get_supabase_client
@@ -23,11 +23,20 @@ class TransactionCreate(BaseModel):
 
     category_id: UUID | None = None
     category: str | None = Field(default=None, min_length=1, max_length=100)
-    amount: Decimal = Field(gt=0, max_digits=12, decimal_places=2)
+    amount: Decimal = Field(max_digits=12, decimal_places=2)
     transaction_type: TransactionType = TransactionType.expense
     transaction_date: date = Field(default_factory=date.today)
     note: str | None = Field(default=None, max_length=1000)
     merchant: str | None = Field(default=None, max_length=255)
+
+    @model_validator(mode="after")
+    def normalize_signed_amount(self):
+        if self.amount == 0:
+            raise ValueError("Amount cannot be zero")
+        if self.amount < 0:
+            self.amount = abs(self.amount)
+            self.transaction_type = TransactionType.expense
+        return self
 
     @field_validator("transaction_date")
     @classmethod
@@ -42,11 +51,20 @@ class TransactionUpdate(BaseModel):
 
     category_id: UUID | None = None
     category: str | None = Field(default=None, min_length=1, max_length=100)
-    amount: Decimal | None = Field(default=None, gt=0, max_digits=12, decimal_places=2)
+    amount: Decimal | None = Field(default=None, max_digits=12, decimal_places=2)
     transaction_type: TransactionType | None = None
     transaction_date: date | None = None
     note: str | None = Field(default=None, max_length=1000)
     merchant: str | None = Field(default=None, max_length=255)
+
+    @model_validator(mode="after")
+    def normalize_signed_amount(self):
+        if self.amount == 0:
+            raise ValueError("Amount cannot be zero")
+        if self.amount is not None and self.amount < 0:
+            self.amount = abs(self.amount)
+            self.transaction_type = TransactionType.expense
+        return self
 
     @field_validator("transaction_date")
     @classmethod

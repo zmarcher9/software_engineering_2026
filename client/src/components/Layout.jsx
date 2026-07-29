@@ -23,10 +23,10 @@ function Layout({ onLogout, user }) {
               <NavLink to="/dashboard" className={navLinkClassName}>
                 Dashboard
               </NavLink>
-              <NavLink to="/dashboard" className={navLinkClassName}>
+              <NavLink to="/transactions" className={navLinkClassName}>
                 Transactions
               </NavLink>
-              <NavLink to="/dashboard" className={navLinkClassName}>
+              <NavLink to="/budgets" className={navLinkClassName}>
                 Budgets
               </NavLink>
               {user?.is_admin ? (

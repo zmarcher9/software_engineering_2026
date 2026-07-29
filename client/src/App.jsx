@@ -4,6 +4,7 @@ import Layout from './components/Layout'
 import ProtectedRoute from './components/ProtectedRoute'
 import AdminPage from './pages/AdminPage'
 import AuthPage from './pages/AuthPage'
+import BudgetsPage from './pages/BudgetsPage'
 import DashboardPage from './pages/DashboardPage'
 import TransactionsPage from './pages/TransactionsPage'
 
@@ -61,6 +62,14 @@ function AppContent() {
           element={
             <ProtectedRoute isAuthenticated={isAuthenticated}>
               <TransactionsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/budgets"
+          element={
+            <ProtectedRoute isAuthenticated={isAuthenticated}>
+              <BudgetsPage />
             </ProtectedRoute>
           }
         />

@@ -2,11 +2,19 @@ import { useState } from 'react'
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
 
-function TransactionForm() {
+function localDateString(date = new Date()) {
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
+
+function TransactionForm({ onTransactionSaved }) {
   const [formData, setFormData] = useState({
     amount: '',
+    transactionType: 'expense',
     category: 'Food',
-    date: new Date().toISOString().slice(0, 10),
+    date: localDateString(),
     note: '',
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -24,16 +32,12 @@ function TransactionForm() {
     const rawAmount = String(amountValue).trim()
     const amount = Number(rawAmount)
 
-    if (!rawAmount || Number.isNaN(amount) || amount <= 0) {
-      setError('Amount must be greater than zero.')
+    if (!rawAmount || Number.isNaN(amount) || amount === 0) {
+      setError('Amount cannot be zero.')
       return false
     }
 
-    const selectedDate = new Date(dateValue)
-    const today = new Date()
-    today.setHours(0, 0, 0, 0)
-
-    if (selectedDate > today) {
+    if (dateValue > localDateString()) {
       setError('Transaction date cannot be in the future.')
       return false
     }
@@ -51,12 +55,14 @@ function TransactionForm() {
     setSuccessMessage('')
 
     const amountValue = event.currentTarget.elements.namedItem('amount')?.value ?? ''
+    const selectedType = event.currentTarget.elements.namedItem('transactionType')?.value ?? formData.transactionType
     const categoryValue = event.currentTarget.elements.namedItem('category')?.value ?? formData.category
     const dateValue = event.currentTarget.elements.namedItem('date')?.value ?? formData.date
     const noteValue = event.currentTarget.elements.namedItem('note')?.value ?? formData.note
 
     const nextFormData = {
       amount: amountValue,
+      transactionType: selectedType,
       category: categoryValue,
       date: dateValue,
       note: noteValue,
@@ -71,6 +77,7 @@ function TransactionForm() {
     setIsSubmitting(true)
 
     try {
+      const transactionType = Number(amountValue) < 0 ? 'expense' : selectedType
       const response = await fetch(`${API_BASE_URL}/transactions`, {
         method: 'POST',
         headers: {
@@ -79,6 +86,7 @@ function TransactionForm() {
         },
         body: JSON.stringify({
           amount: Number(amountValue),
+          transaction_type: transactionType,
           category: categoryValue,
           transaction_date: dateValue,
           note: noteValue,
@@ -89,11 +97,16 @@ function TransactionForm() {
         throw new Error('Unable to save transaction right now.')
       }
 
+      const savedTransaction = await response.json?.()
+      if (savedTransaction) {
+        onTransactionSaved?.(savedTransaction)
+      }
       setSuccessMessage(`Transaction saved for ${categoryValue}.`)
       setFormData({
         amount: '',
+        transactionType: selectedType,
         category: categoryValue,
-        date: new Date().toISOString().slice(0, 10),
+        date: localDateString(),
         note: '',
       })
     } catch (err) {
@@ -110,15 +123,29 @@ function TransactionForm() {
         <label className="block text-sm text-slate-300">
           <span className="mb-2 block">Amount</span>
           <input
-            type="number"
+            type="text"
+            inputMode="decimal"
             name="amount"
-            step="0.01"
             value={formData.amount}
             onChange={handleChange}
             aria-label="Amount"
             className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-slate-100 outline-none transition focus:border-emerald-500"
             placeholder="0.00"
           />
+        </label>
+
+        <label className="block text-sm text-slate-300">
+          <span className="mb-2 block">Type</span>
+          <select
+            name="transactionType"
+            value={formData.transactionType}
+            onChange={handleChange}
+            aria-label="Type"
+            className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-slate-100 outline-none transition focus:border-emerald-500"
+          >
+            <option value="expense">Expense</option>
+            <option value="income">Income</option>
+          </select>
         </label>
 
         <label className="block text-sm text-slate-300">

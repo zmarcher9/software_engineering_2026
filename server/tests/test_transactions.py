@@ -265,6 +265,16 @@ def test_rejects_invalid_amount(client):
     assert response.status_code == 422
 
 
+def test_negative_amount_is_normalized_to_expense(client):
+    response = client.post(
+        "/transactions",
+        json={"amount": "-12.50", "category": "Shopping", "transaction_type": "income"},
+    )
+    assert response.status_code == 201
+    assert response.json()["amount"] == "12.50"
+    assert response.json()["transaction_type"] == "expense"
+
+
 def test_rejects_unexpected_fields(client):
     response = client.post("/transactions", json={"amount": 10, "unexpected": True})
     assert response.status_code == 422

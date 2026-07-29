@@ -6,6 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from database import test_supabase_connection
 from routes_admin import router as admin_router
 from routes_auth import router as auth_router
+from routes_budgets import router as budgets_router
 from routes_transactions import router as transactions_router
 
 app = FastAPI(title="FlowFunds API", version="0.1.0")
@@ -35,6 +36,7 @@ app.add_middleware(
 app.include_router(auth_router)
 app.include_router(transactions_router)
 app.include_router(admin_router)
+app.include_router(budgets_router)
 
 
 @app.get("/")

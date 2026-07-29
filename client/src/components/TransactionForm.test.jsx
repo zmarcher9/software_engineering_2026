@@ -29,15 +29,30 @@ describe('TransactionForm', () => {
     expect(screen.getByRole('button', { name: /save transaction/i })).toBeInTheDocument()
   })
 
-  it('displays an error and does not call fetch for zero or negative amount', async () => {
+  it('displays an error and does not call fetch for a zero amount', async () => {
     const user = userEvent.setup()
     render(<TransactionForm />)
 
-    await user.type(screen.getByLabelText(/amount/i), '-1')
+    await user.type(screen.getByLabelText(/amount/i), '0')
     await user.click(screen.getByRole('button', { name: /save transaction/i }))
 
-    expect(screen.getByText(/amount must be greater than zero/i)).toBeInTheDocument()
+    expect(screen.getByText(/amount cannot be zero/i)).toBeInTheDocument()
     expect(mockFetch).not.toHaveBeenCalled()
+  })
+
+  it('allows a negative transaction amount', async () => {
+    const user = userEvent.setup()
+    mockFetch.mockResolvedValue({ ok: true })
+    render(<TransactionForm />)
+
+    await user.type(screen.getByLabelText(/amount/i), '-25.50')
+    await user.click(screen.getByRole('button', { name: /save transaction/i }))
+
+    await waitFor(() => expect(mockFetch).toHaveBeenCalledTimes(1))
+    expect(JSON.parse(mockFetch.mock.calls[0][1].body)).toEqual(expect.objectContaining({
+      amount: -25.5,
+      transaction_type: 'expense',
+    }))
   })
 
   it('displays an error and does not call fetch for a future transaction date', async () => {
@@ -84,12 +99,27 @@ describe('TransactionForm', () => {
         }),
         body: JSON.stringify({
           amount: 42.5,
+          transaction_type: 'expense',
           category: 'Shopping',
           transaction_date: '2026-07-15',
           note: 'Groceries',
         }),
       }),
     )
+  })
+
+  it('reports the saved transaction so dashboard totals can update immediately', async () => {
+    const user = userEvent.setup()
+    const onTransactionSaved = vi.fn()
+    const savedTransaction = { id: 'saved-1', amount: '250.00', transaction_type: 'income' }
+    mockFetch.mockResolvedValue({ ok: true, json: async () => savedTransaction })
+    render(<TransactionForm onTransactionSaved={onTransactionSaved} />)
+
+    await user.type(screen.getByLabelText(/amount/i), '250')
+    await user.selectOptions(screen.getByLabelText(/type/i), 'income')
+    await user.click(screen.getByRole('button', { name: /save transaction/i }))
+
+    await waitFor(() => expect(onTransactionSaved).toHaveBeenCalledWith(savedTransaction))
   })
 
   it('displays a success message and resets the form after a successful response', async () => {
@@ -104,7 +134,7 @@ describe('TransactionForm', () => {
     await user.click(screen.getByRole('button', { name: /save transaction/i }))
 
     expect(await screen.findByText(/transaction saved for/i)).toBeInTheDocument()
-    expect(screen.getByLabelText(/amount/i)).toHaveValue(null)
+    expect(screen.getByLabelText(/amount/i)).toHaveValue('')
     expect(screen.getByLabelText(/note/i)).toHaveValue('')
   })
 

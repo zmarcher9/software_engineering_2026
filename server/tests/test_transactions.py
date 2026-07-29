@@ -180,7 +180,7 @@ def test_transactions_require_authentication():
 
 def test_supabase_access_token_is_validated(monkeypatch):
     fake_client = type("Client", (), {"auth": FakeAuth(USER_ID)})()
-    monkeypatch.setattr(database, "get_supabase_client", lambda: fake_client)
+    monkeypatch.setattr(database, "get_supabase_client", lambda access_token=None: fake_client)
     credentials = HTTPAuthorizationCredentials(
         scheme="Bearer",
         credentials="supabase-access-token",
@@ -190,7 +190,7 @@ def test_supabase_access_token_is_validated(monkeypatch):
 
 def test_invalid_supabase_access_token_is_rejected(monkeypatch):
     fake_client = type("Client", (), {"auth": FakeAuth(error=ValueError("expired"))})()
-    monkeypatch.setattr(database, "get_supabase_client", lambda: fake_client)
+    monkeypatch.setattr(database, "get_supabase_client", lambda access_token=None: fake_client)
     credentials = HTTPAuthorizationCredentials(
         scheme="Bearer",
         credentials="supabase-access-token",
@@ -263,6 +263,16 @@ def test_cannot_access_another_users_transaction(client):
 def test_rejects_invalid_amount(client):
     response = client.post("/transactions", json={"amount": 0})
     assert response.status_code == 422
+
+
+def test_negative_amount_is_normalized_to_expense(client):
+    response = client.post(
+        "/transactions",
+        json={"amount": "-12.50", "category": "Shopping", "transaction_type": "income"},
+    )
+    assert response.status_code == 201
+    assert response.json()["amount"] == "12.50"
+    assert response.json()["transaction_type"] == "expense"
 
 
 def test_rejects_unexpected_fields(client):

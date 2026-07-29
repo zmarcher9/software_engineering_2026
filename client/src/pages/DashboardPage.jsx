@@ -57,6 +57,13 @@ function DashboardPage({ user }) {
     loadTransactions()
   }, [])
 
+  const handleTransactionSaved = (transaction) => {
+    setTransactions((current) => [
+      { ...transaction, amount: Number(transaction.amount) },
+      ...current,
+    ])
+  }
+
   // totals are derived from raw transactions rather than stored separately,
   // so they always stay in sync with whatever data is currently loaded
   const { totalIncome, totalExpenses, totalBalance } = useMemo(() => {
@@ -111,18 +118,9 @@ function DashboardPage({ user }) {
       </div>
 
       <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
-        <TransactionForm />
+        <TransactionForm onTransactionSaved={handleTransactionSaved} />
 
         <section className="space-y-4">
-          <div className="rounded-2xl border border-slate-800 bg-slate-900/70 p-6">
-            <h2 className="text-lg font-semibold text-white">Next up</h2>
-            <ul className="mt-4 space-y-3 text-sm text-slate-400">
-              <li>• Connect this form to the FastAPI transactions endpoint.</li>
-              <li>• Add validation and loading states for submit.</li>
-              <li>• Show recent transactions and budget summaries.</li>
-            </ul>
-          </div>
-
           <div className="rounded-2xl border border-slate-800 bg-slate-900/70 p-6">
             <h2 className="text-lg font-semibold text-white">Status</h2>
             <div className="mt-4 rounded-lg border border-emerald-500/20 bg-emerald-500/10 p-4 text-sm text-emerald-300">
